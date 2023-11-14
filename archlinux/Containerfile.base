@@ -3,11 +3,11 @@
 ## |
 
 # Reusable base template
-FROM docker.io/library/archlinux AS base
+FROM docker.io/library/archlinux:base-devel AS base
 
 # Remove container specific storage optimization in Pacman
 RUN sed -i -e "s|^NoExtract.*||g" /etc/pacman.conf && \
-    pacman --noconfirm -Syu
+    pacman --noconfirm -Syyu
 
 # Clock
 ARG SYSTEM_OPT_TIMEZONE
@@ -40,17 +40,40 @@ RUN pacman --noconfirm -S \
     linux \
     linux-headers \
     linux-firmware \
-    amd-ucode \
+    intel-ucode \
     \
     dosfstools \
-    xfsprogs \
     \
     grub \
     mkinitcpio \
     \
     podman \
     ostree \
-    which
+    which \
+    man \
+    vim \
+    git
+
+
+# Setup build area for makepkg
+#RUN mkdir /tmp/build && \
+#    chgrp nobody /tmp/build && \
+#    chmod g+ws /tmp/build && \
+#    setfacl -m u::rwx,g::rwx /tmp/build && \
+#    setfacl -d --set u::rwx,g::rwx,o::- /tmp/build
+
+# Install yay
+#RUN git clone https://aur.archlinux.org/yay-bin/ /tmp/build/yay
+#RUN chmod -R g+w /tmp/build/yay
+#RUN cd /tmp/build/yay && sudo -u nobody makepkg
+#RUN pacman --noconfirm -U /tmp/build/yay/yay*.pkg.tar.*
+
+# install helper and add a user for it
+ADD add-aur.sh /root
+RUN bash /root/add-aur.sh "aur-builder" "yay"
+
+# Install pacdef (and rust as a dependency)
+RUN aur-install pacdef
 
 # OSTree: Prepare microcode and initramfs
 RUN moduledir=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d) && \

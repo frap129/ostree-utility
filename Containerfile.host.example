@@ -9,14 +9,17 @@ FROM localhost/ostree/base AS host
 ARG OSTREE_SYS_BOOT_LABEL
 ARG OSTREE_SYS_ROOT_LABEL
 ARG OSTREE_SYS_HOME_LABEL
-RUN echo "LABEL=${OSTREE_SYS_ROOT_LABEL} /         xfs  rw,relatime                                                                                           0 1" >> /etc/fstab && \
-    echo "LABEL=${OSTREE_SYS_HOME_LABEL} /var/home xfs  rw,relatime                                                                                           0 2" >> /etc/fstab && \
-    echo "LABEL=${OSTREE_SYS_BOOT_LABEL} /boot/efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro 0 2" >> /etc/fstab
+COPY fstab /etc/fstab
 
 # Root password (todo move to secret)
 RUN echo "root:ostree" | chpasswd
 
+RUN echo "permit :wheel" > /etc/doas.conf
+
+# Install packages
+RUN pacman --noconfirm -S \
+    doas \
+    openssh
+
 # SSHD
-RUN pacman --noconfirm -S openssh && \
-    systemctl enable sshd && \
-    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+RUN systemctl enable sshd
