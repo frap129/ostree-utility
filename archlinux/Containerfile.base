@@ -7,7 +7,7 @@ FROM docker.io/library/archlinux AS base
 
 # Remove container specific storage optimization in Pacman
 RUN sed -i -e "s|^NoExtract.*||g" /etc/pacman.conf && \
-    pacman --noconfirm -Syu
+    pacman --noconfirm -Syyu
 
 # Clock
 ARG SYSTEM_OPT_TIMEZONE
