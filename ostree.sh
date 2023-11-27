@@ -32,7 +32,9 @@ function ENV_CREATE_OPTS {
     declare SYSTEM_OPT_TIMEZONE=${SYSTEM_OPT_TIMEZONE:='Etc/UTC'}
     declare SYSTEM_OPT_KEYMAP=${SYSTEM_OPT_KEYMAP:='us'}
     declare SYSTEM_BASE_NAME=${SYSTEM_BASE_NAME:='archlinux'}
-    declare PODMAN_OPT_BUILDFILE=${PODMAN_OPT_BUILDFILE:="$(dirname ${0})/${SYSTEM_BASE_NAME}/Containerfile.base:ostree/base,$(dirname ${0})/Containerfile.host.example:ostree/host"}
+    declare PODMAN_OPT_BASEFILE=${PODMAN_OPT_BASEFILE:="$(dirname ${0})/${SYSTEM_BASE_NAME}/Containerfile.base:ostree/base"}
+    declare PODMAN_OPT_HOSTFILE=${PODMAN_OPT_HOSTFILE:="$(dirname ${0})/Containerfile.host.example:ostree/host"}
+    declare PODMAN_OPT_BUILDFILE=${PODMAN_OPT_BUILDFILE:="${PODMAN_OPT_BASEFILE},${PODMAN_OPT_HOSTFILE}"}
     declare PODMAN_OPT_CACHE=${PODMAN_OPT_CACHE='true'}
     declare PACMAN_OPT_CACHE=${PACMAN_OPT_CACHE='true'}
 }
@@ -250,7 +252,8 @@ function CLI_SETUP {
             # Options
 
             '-b' | '--base-os')
-                declare SYSTEM_BASE_NAME=${2}
+                declare SYSTEM_BASE_NAME="$(basename ${2})"
+                declare PODMAN_OPT_BASEFILE="$(pwd)/${2}/Containerfile.base:ostree/base"
             ;;
 
             '-c' | '--cmdline')
@@ -262,7 +265,7 @@ function CLI_SETUP {
             ;;
 
             '-f' | '--file')
-                declare PODMAN_OPT_BUILDFILE=${2}
+                declare PODMAN_OPT_HOSTFILE=${2}
             ;;
 
             '-k' | '--keymap')
@@ -349,7 +352,7 @@ function CLI_SETUP {
                 '  upgrade : (Update deployment) : Creates a new OSTree commit'
                 '  revert  : (Update deployment) : Rolls back version 0'
                 'Options:'
-                '  -b, --base-os string      : (install/upgrade) : Name of OS to use as a base. Defaults to archlinux'
+                '  -b, --base-os string      : (install/upgrade) : Relative path to a directory containing a Containterfile.base. The parent directory of the base file will be used as the OS name. Defaults to archlinux'
                 '  -c, --cmdline string      : (install/upgrade) : List of kernel arguments for boot'
                 '  -d, --dev     string      : (install)         : Device SCSI (ID-LINK) for new installation'
                 '  -f, --file    stringArray : (install/upgrade) : Containerfile(s) for new deployment'

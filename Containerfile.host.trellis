@@ -1,0 +1,28 @@
+## |
+## | CUSTOMIZE INSTALLATION
+## |
+
+# Extend any base image with this
+FROM localhost/ostree/base AS host
+
+# Mount disk locations
+ARG OSTREE_SYS_BOOT_LABEL
+ARG OSTREE_SYS_ROOT_LABEL
+ARG OSTREE_SYS_HOME_LABEL
+COPY fstab /etc/fstab
+
+# Root password (todo move to secret)
+RUN echo "root:ostree" | chpasswd
+
+RUN echo "permit :wheel" > /etc/doas.conf
+
+RUN pacdef p u
+
+# Install packages
+RUN pacman --noconfirm -S \
+    doas \
+    openssh \
+    git
+
+# SSHD
+RUN systemctl enable sshd
